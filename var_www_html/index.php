@@ -45,7 +45,6 @@ else				 $config_slo='off';
 // url with query parameter
 $myurl = strlen($_SERVER['QUERY_STRING']) ? basename($_SERVER['PHP_SELF'])."?".$_SERVER['QUERY_STRING'] : basename($_SERVER['PHP_SELF']);
 echo 'Commands: <a href="'.$myurl.'">refresh</a> | ' . 
-	 '<a href="../logout.php">log out</a> | '.
 	 'Infrastructure: <a href="config_si.php">'.$config_si.'</a> | ' .
 	 'Offline: <a href="config_so.php">'.$config_so.'</a> | ' .
 	 'Only Local: <a href="config_slo.php">'.$config_slo.'</a><br>';
@@ -156,7 +155,7 @@ if(!isset($_SESSION['default_gw_id'])) {
 		if($defgw_info != null) {
 			echo "<pre>";print_r($defgw_info); echo "</pre>";		
 		}
-		$_SESSION['default_gw_id'] = 62;
+		$_SESSION['default_gw_id'] = 0; // not valid value
 	}
 
 
@@ -294,7 +293,7 @@ if ( $result === FALSE) {
 	exit;
 }
 
-echo "<br>Rows: " . $result->num_rows . "<br>";
+//echo "<br>Rows: " . $result->num_rows . "<br>";
 
 if ($result->num_rows > 0) {
 	if(!isset($_GET["date"])) {
@@ -481,7 +480,7 @@ if ($result->num_rows > 0) {
 
 
 		if(($_SESSION['slo'] == true) && ($row['defaultgw_id'] != $_SESSION['default_gw_id'])) {
-			$show_entry = false;
+			$show_entry = true; // should be false but local default GW still has some errors.
 		}
 
 
