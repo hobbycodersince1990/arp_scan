@@ -1,25 +1,6 @@
 <?PHP
-session_start();
-if($_SESSION['angemeldet'] != true) {
-	$hostname = $_SERVER['HTTP_HOST'];
-	$path = dirname($_SERVER['PHP_SELF']);
-	//header('Location: http://'.$hostname.'/index.php');
-}
- 
-// default configuration
-if(!isset($_SESSION['si'])) {
-	$_SESSION['si']  = false;		// Show Infrastructure components (not only user devices)
-	$_SESSION['so']  = false;		// Show Offline components (not only online)
-	$_SESSION['slo'] = true;		// show local only components (with the local default GW)
-}
+include "inc.header.php";
 ?>
-<!DOCTYPE HTML>
-<html>
-    <head>
-		<title>phpArpScan</title>
-    </head>
-    <body>
-
 <?php
 // get all scans from the last 10 minutes ...
 //		SELECT * FROM scans WHERE DATE_SUB(NOW(),INTERVAL 10 MINUTE) <= created ORDER BY `created` ASC  
@@ -31,26 +12,6 @@ if(!isset($_SESSION['si'])) {
 
 
 <?PHP
-
-
-
-if($_SESSION['si'])  $config_si='on';
-else				 $config_si='off';
-if($_SESSION['so'])  $config_so='on';
-else				 $config_so='off';
-if($_SESSION['slo']) $config_slo='on';
-else				 $config_slo='off';
-
-
-// url with query parameter
-$myurl = strlen($_SERVER['QUERY_STRING']) ? basename($_SERVER['PHP_SELF'])."?".$_SERVER['QUERY_STRING'] : basename($_SERVER['PHP_SELF']);
-echo 'Commands: <a href="'.$myurl.'">refresh</a> | ' . 
-	 'Infrastructure: <a href="config_si.php">'.$config_si.'</a> | ' .
-	 'Offline: <a href="config_so.php">'.$config_so.'</a> | ' .
-	 'Only Local: <a href="config_slo.php">'.$config_slo.'</a><br>';
-
-
-
 
 
 function output_debug($str) {
@@ -65,25 +26,7 @@ function datetimetime_to_sec($time) {
 	return $hours * 3600 + $minutes * 60 + $seconds; 
 }
 
-function get_vendor($mac_address) {
-	
-	
-	// echo "<h2>get_vendor($mac_address)</h2>";
-	$url = "http://api.macvendors.com/" . urlencode($mac_address);
 
-	$ch = curl_init();
-
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	$response = curl_exec($ch);
-
-
-	if($response) {
-		return  $response;
-	} else {
-		return "(Unknown)";
-	}
-}
 
 function get_default_gw() {
 	exec('/sbin/route -n', $output);
@@ -99,6 +42,7 @@ function get_default_gw() {
 	}
 	return $default_gw;
 }
+
 
 
 
@@ -157,122 +101,10 @@ if(!isset($_SESSION['default_gw_id'])) {
 		}
 		$_SESSION['default_gw_id'] = 0; // not valid value
 	}
-
-
 }
 
 
 echo "Default GW: " . $_SESSION['default_gw_id'];
-
-
-//
-// device_id is set. Therefore show all scans from this device
-//
-if(isset($_GET["device_id"])) {
-	$device_id = $_GET["device_id"];
-
-	if(!isset($_GET["date"])) {
-		output_debug( "Error missing parameter date");
-		exit;
-	}
-	$query_date = $_GET["date"];
-	
-	// get name, etc. from the device
-	$sql = "SELECT * FROM devices WHERE id = $device_id;";
-	$result = $conn->query($sql);
-	if ( $result === FALSE) {
-		output_debug( "Error selecting table scans: " . $conn->error);
-		$conn->close();
-		exit;
-	}
-	if ($result->num_rows > 0) {
-		$device = $result->fetch_assoc();
-		
-		$current_device_id = $device['id'];
-		$current_device_name = $device['name'];
-		$current_device_owner = $device['owner'];
-	}
-	
-	
-	
-	
-
-	//
-	// show the scans in a graphical form
-	//
-	$sql = "SELECT scans.created FROM scans WHERE scans.device_id = $device_id AND scans.created >= '$query_date' AND scans.created < '$query_date' + INTERVAL 1 DAY;";
-	$result = $conn->query($sql);
-	if ( $result === FALSE) {
-		output_debug( "Error selecting table scans: " . $conn->error);
-		$conn->close();
-		exit;
-	}
-	
-
-	$values = array();	
-	$value  = array();
-	
-	
-	
-	if ($result->num_rows > 0) {
-		$last = -1000000000;
-		$last_created = "";
-		echo "<h2>Results from $query_date for device (id: $current_device_id) $current_device_name from $current_device_owner</h2>";
-		while($row = $result->fetch_assoc()) {
-			// echo $row["created"]. " from " . $row["ip"]. "<br>";
-			// echo "<pre>"; print_r($row);echo "</pre>";
-			// echo "<pre>"; print_r($date);echo "</pre>";
-			// date("Y-m-d H:i:s
-			$second_of_the_day = datetimetime_to_sec($row["created"]);
-			
-			if(($second_of_the_day - $last) > $online_offline_threshold) {
-			    $diff_seconds = $second_of_the_day - $last;
-				
-				if(strlen($last_created) == 0) {
-					echo "START at " . substr($row["created"], 11) . '<br>';
-				} else {
-					// echo "LEFT at " . $last_created . ' - ' . $row["created"] . ' for ' . gmdate("H:i:s", $diff_seconds) . '<br>';
-					// echo "LEFT at " . substr($last_created, 11) . ' for ' . gmdate("H:i:s", $diff_seconds) . ' hours. BACK at ' .  substr($row["created"],11) . '<br>';
-					
-					echo "AWAY FROM " . substr($last_created, 11) . ' UNTIL ' .  substr($row["created"],11) .'. DURATION: ' . gmdate("H:i:s", $diff_seconds) . ' hours.<br>';
-					
-					
-				}
-			}
-			$last = $second_of_the_day;
-			$last_created = $row["created"];
-			
-			$value  = array($second_of_the_day/3600, 1);
-			$values[] = $value;
-		}
-		$end = gmdate("H:i:s", round($values[count($values)-1][0] * 3600));
-		echo "END at $end";
-		
-		
-		require_once("phpChart_Lite/conf.php");
-
-		$l2 = array(array(0, 1.2), array(12, 1.2), array(24,1.2));
-
-		$pc = new C_PhpChartX(array($values, $l2),'info1b');
-
-		$pc->jqplot_show_plugins(true);
-		//$pc->set_legend(array('show'=>false));
-		//$pc->set_animate(false);
-
-		//$pc->add_series(array('showLabel'=>true));
-		//$pc->add_series(array('showLabel'=>true));
-		//$pc->add_series(array('showLabel'=>false));
-		
-		$pc->draw(2000,100);   // 600,300
-		
-		
-	} else {
-		echo '<br><font color="red">0 scans found for device ' . "(id: $current_device_id) on the $query_date<br>device name: $current_device_name<br>Owner: $current_device_owner</font><br>";
-	}
-}
-
-
-
 
 
 
@@ -303,35 +135,7 @@ if ($result->num_rows > 0) {
 		$query_date = $_GET["date"];
 	}
 	
-	// Show "calendar" to select date
-	// A device MUST be selected
-	if(isset($_GET["device_id"])) {
-		echo "<h2>Select date</h2>";
-		
-		$cur_date = new DateTime($query_date);
-		$cur_date->add(new DateInterval('P1D'));		// + 1 days
-		$today = new DateTime();
-		if($cur_date > $today) {
-			$show_tomorrow = false;
-		} else {
-			$show_tomorrow = true;
-		}
-		$tomorrow = $cur_date->format('Y-m-d');
-		$cur_date->sub(new DateInterval('P2D'));		// - 2 days
-		$yesterday = $cur_date->format('Y-m-d');
-		
-		
 
-		echo "Change date: ";
-		echo '<a href="?device_id=' . $_GET["device_id"]  . '&date=' . $yesterday. '">-1day</a>  ';
-		echo '<a href="?device_id=' . $_GET["device_id"]  . '&date=' . $query_date. '">' . $query_date . '</a>  ';
-		echo "<b></b>";
-		if($show_tomorrow) {
-			echo '<a href="?device_id=' . $_GET["device_id"]  . '&date=' . $tomorrow. '">+1day</a>';
-		}
-		echo "<br>";
-	}
-	
 	
 	echo "<h2>Select device</h2>";
 	echo '<table border="1"><tr><th>ID.</th><th>tasks</th><th>device name</th><th>owner</th>'.
@@ -382,7 +186,6 @@ if ($result->num_rows > 0) {
 				} else {
 					$last_scanned = $difference->format('%Im%Ss');
 				}
-				
 			}
 			
 			//
@@ -400,57 +203,8 @@ if ($result->num_rows > 0) {
 		}
 		
 		
-
-
-		
-		//
-		// Update vendor information in the devices table
-		//
-		if(strlen($row["vendor"]) == 0) {
-			//echo "updating"; 
-
-			$vendor = get_vendor($row["mac"]);
-
-			
-			$sql_update = 	"UPDATE  arp_scan.devices " . 
-							"SET  vendor =  '" . $conn->real_escape_string ($vendor) . "' " .
-							"WHERE devices.id = " . $row["id"];
-			
-
-			if ($conn->query($sql_update) === FALSE) {
-				output_debug( "Error update vendor of device $device_id in table devices: " . $conn->error);
-				$conn->close();
-				exit;
-			}
-		} else {
-			$vendor = $row["vendor"];
-		}
 		
 
-		
-		//
-		// Update hostname information in the devices table
-		//
-		if(strlen($row["hostname"]) == 0) {
-			//echo "updating"; 
-			if(strlen($ip) > 0) {
-				$hostname = gethostbyaddr ( $ip );
-				// echo "$hostname = gethostbyaddr ( $ip );<br>";
-				$sql_update = 	"UPDATE  arp_scan.devices " . 
-								"SET  hostname =  '" . $conn->real_escape_string($hostname) . "' " .
-								"WHERE devices.id = " . $row["id"];
-				
-				if ($conn->query($sql_update) === FALSE) {
-					output_debug( "Error update hostname of device $device_id in table devices: " . $conn->error);
-					$conn->close();
-					exit;
-				}
-			} else {
-				$hostname = "";
-			}
-		} else {
-			$hostname = $row["hostname"];
-		}
 
 		//
 		// Update defaultgw_id information in the devices table
@@ -495,7 +249,7 @@ if ($result->num_rows > 0) {
 			else			echo '<tr>';
 			echo '<td>' . $row["id"] . '</td>';
 			echo '<td><a href="edit_device.php?device_id=' . $row['id']  . '">edit</a></td>';
-			echo '<td><a href="?device_id=' . $row['id']  . '&date=' . $query_date. '">' . $row["name"]. '</a></td>';
+			echo '<td><a href="device.php?device_id=' . $row['id']  . '&date=' . $query_date. '">' . $row["name"]. '</a></td>';
 			echo '<td>' . $row["owner"]. '</td>';
 			
 			
@@ -512,8 +266,8 @@ if ($result->num_rows > 0) {
 			echo '<td>' . $row['mac'] . '</td>';
 			echo '<td>' . $row['defaultgw_id'] . '</td>';
 			
-			echo '<td>' . $hostname . '</td>';
-			echo '<td>' . $vendor . '</td>';
+			echo '<td>' . $row['hostname'] . '</td>';
+			echo '<td>' . $row['vendor'] . '</td>';
 			echo '</tr>';
 		}
 	}
