@@ -44,7 +44,7 @@ else				 $config_slo='off';
 
 // url with query parameter
 $myurl = strlen($_SERVER['QUERY_STRING']) ? basename($_SERVER['PHP_SELF'])."?".$_SERVER['QUERY_STRING'] : basename($_SERVER['PHP_SELF']);
-echo 'Hello <strong>' . $_SESSION['user'] . '</strong>. <a href="'.$myurl.'">refresh</a> | ' . 
+echo 'Commands: <a href="'.$myurl.'">refresh</a> | ' . 
 	 '<a href="../logout.php">log out</a> | '.
 	 'Infrastructure: <a href="config_si.php">'.$config_si.'</a> | ' .
 	 'Offline: <a href="config_so.php">'.$config_so.'</a> | ' .
