@@ -7,7 +7,9 @@ Everything is done for UBUNTU Linux. However the same concept can be used for an
 
 ## Install
 See on the site:
-http://raspberrypisolutions.wermescher.com/automatic-presence-detection-ubuntu/
+[For ubuntu but hosted on my raspberypisolutions site](http://raspberrypisolutions.wermescher.com/automatic-presence-detection-ubuntu/)
+
+
 
 ## Assets
 
