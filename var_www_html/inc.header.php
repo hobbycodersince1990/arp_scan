@@ -34,7 +34,9 @@ ini_set('display_startup_errors', true);
 <?PHP	
 // url with query parameter for the refresh function
 $myurl = strlen($_SERVER['QUERY_STRING']) ? basename($_SERVER['PHP_SELF'])."?".$_SERVER['QUERY_STRING'] : basename($_SERVER['PHP_SELF']);
-echo 'Commands: <a href="'.$myurl.'">refresh</a> | ' . 
+echo 
+	 '<a href="index.php">home</a> | ' . 
+	 '<a href="'.$myurl.'">refresh</a> | ' . 
 	 'Infrastructure: <a href="config_si.php">'.$config_si.'</a> | ' .
 	 'Offline: <a href="config_so.php">'.$config_so.'</a> | ' .
 	 'Only Local: <a href="config_slo.php">'.$config_slo.'</a> | ' .

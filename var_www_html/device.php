@@ -48,17 +48,52 @@ if ($conn->select_db($database) === FALSE) {
 
 
 
-//
-// device_id is set. Therefore show all scans from this device
-//
+
 if(isset($_GET["device_id"])) {
+
+	$query_date = $_GET["date"];
 	$device_id = $_GET["device_id"];
+
+
+	echo "<h2>Select date</h2>";
+	
+	$cur_date = new DateTime($query_date);
+	$cur_date->add(new DateInterval('P1D'));		// + 1 days
+	$today = new DateTime();
+	if($cur_date > $today) {
+		$show_tomorrow = false;
+	} else {
+		$show_tomorrow = true;
+	}
+	$tomorrow = $cur_date->format('Y-m-d');
+	$cur_date->sub(new DateInterval('P2D'));		// - 2 days
+	$yesterday = $cur_date->format('Y-m-d');
+	
+	
+
+	echo "Change date: ";
+	echo '<a href="?device_id=' . $device_id  . '&date=' . $yesterday. '">-1day</a>  ';
+	echo '<a href="?device_id=' . $device_id  . '&date=' . $query_date. '">' . $query_date . '</a>  ';
+	echo "<b></b>";
+	if($show_tomorrow) {
+		echo '<a href="?device_id=' . $device_id  . '&date=' . $tomorrow. '">+1day</a>';
+	}
+	echo ' | <a href="?device_id=' . $device_id  . '&date=' . date('Y-m-d') . '">today</a>';
+	echo "<br>";
+
+
+
+
+
+	//
+	// show all scans from the selected device
+	//
 
 	if(!isset($_GET["date"])) {
 		output_debug( "Error missing parameter date");
 		exit;
 	}
-	$query_date = $_GET["date"];
+	
 	
 	// get name, etc. from the device
 	$sql = "SELECT * FROM devices WHERE id = $device_id;";
@@ -155,32 +190,6 @@ if(isset($_GET["device_id"])) {
 }
 
 
-if(isset($_GET["device_id"])) {
-	echo "<h2>Select date</h2>";
-	
-	$cur_date = new DateTime($query_date);
-	$cur_date->add(new DateInterval('P1D'));		// + 1 days
-	$today = new DateTime();
-	if($cur_date > $today) {
-		$show_tomorrow = false;
-	} else {
-		$show_tomorrow = true;
-	}
-	$tomorrow = $cur_date->format('Y-m-d');
-	$cur_date->sub(new DateInterval('P2D'));		// - 2 days
-	$yesterday = $cur_date->format('Y-m-d');
-	
-	
-
-	echo "Change date: ";
-	echo '<a href="?device_id=' . $_GET["device_id"]  . '&date=' . $yesterday. '">-1day</a>  ';
-	echo '<a href="?device_id=' . $_GET["device_id"]  . '&date=' . $query_date. '">' . $query_date . '</a>  ';
-	echo "<b></b>";
-	if($show_tomorrow) {
-		echo '<a href="?device_id=' . $_GET["device_id"]  . '&date=' . $tomorrow. '">+1day</a>';
-	}
-	echo "<br>";
-}
 
 $conn->close();
 ?>
