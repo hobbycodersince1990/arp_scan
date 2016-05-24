@@ -151,7 +151,6 @@ if(isset($_GET["device_id"])) {
 					// echo "LEFT at " . substr($last_created, 11) . ' for ' . gmdate("H:i:s", $diff_seconds) . ' hours. BACK at ' .  substr($row["created"],11) . '<br>';
 					
 					echo "Sign Out: " . substr($last_created, 11) . '<br>';
-					
 					echo 'Sign In: ' .  substr($row["created"],11) . '<br>';
 					
 					// .'. DURATION: ' . gmdate("H:i:s", $diff_seconds) . ' hours.<br>';
@@ -165,8 +164,23 @@ if(isset($_GET["device_id"])) {
 			$value  = array($second_of_the_day/3600, 1);
 			$values[] = $value;
 		}
+		
+		
 		$end = gmdate("H:i:s", round($values[count($values)-1][0] * 3600));
-		echo "Sign Out: $end";
+		
+		$endsec = datetimetime_to_sec($end);
+		$today = new DateTime();
+		$nowsec = datetimetime_to_sec($today->format('Y-m-d H:i:s'));
+		
+		if(($nowsec - $endsec) > $online_offline_threshold) {
+			echo "Sign Out: $end";	
+		} else {
+			echo "Still present";	
+		}
+		
+		
+		
+		
 		
 		
 	} else {

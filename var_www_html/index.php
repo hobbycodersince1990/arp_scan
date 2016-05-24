@@ -248,15 +248,18 @@ if ($result->num_rows > 0) {
 			if($is_online) 	echo '<tr bgcolor="#99FF66">';
 			else			echo '<tr>';
 			echo '<td>' . $row["id"] . '</td>';
-			echo '<td><a href="edit_device.php?device_id=' . $row['id']  . '">edit</a></td>';
-			echo '<td><a href="device.php?device_id=' . $row['id']  . '&date=' . $query_date. '">' . $row["name"]. '</a></td>';
+			
+			echo '<td><a href="edit_device.php?device_id=' . $row['id']  . '">edit</a>'.
+			' | <a href="http://' . $ip . '/" target="_blank">http</a>'.
+			' | attendance <a href="device.php?device_id=' . $row['id']  . '&date=' . $query_date. '">1</a>' . ' <a href="signinsignout.php?device_id=' . $row['id']  . '&date=' . $query_date. '">2</a>'.
+			'</td>';
+			echo '<td>'.$row["name"]. '</td>';
 			echo '<td>' . $row["owner"]. '</td>';
 			
 			
 			
-			echo '<td><a href="../owasp?ip=' . $ip  . '" target="_blank">' . $ip. '</a></td>';
-			
-			//echo '<td>' . $ip. '</td>';
+			// echo '<td><a href="../owasp?ip=' . $ip  . '" target="_blank">' . $ip. '</a></td>';
+			echo '<td>' . $ip. '</td>';
 			
 			
 			echo '<td>' . $row['created']. '</td>';
